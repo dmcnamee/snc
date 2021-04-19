@@ -9,6 +9,97 @@ from tf_agents.agents.ppo.ppo_agent import PPOAgent
 
 from snc.agents.rl.multi_headed_softmax_policy import MultiHeadedCategoricalActionNetwork
 
+from bellman.environments.transition_model.keras_model.transition_model_types import TransitionModelType
+from bellman.environments.transition_model.keras_model.trajectory_sampler_types import TrajectorySamplerType
+from bellman.trajectory_optimisers.trajectory_optimization_types import TrajectoryOptimizationType
+from bellman.agents.pets.pets_agent import PetsAgent
+from bellman.environments.initial_state_distribution_model import InitialStateDistributionModel
+from bellman.environments.reward_model import RewardModel
+
+
+def create_bellman_pets_agent(
+        env: TFPyEnvironment,
+        agent_name: str = 'PETS_Agent',
+        debug: bool = False, # REQUIRED?
+        reward_model_class: RewardModel = None,
+        initial_state_distribution_model_class: InitialStateDistributionModel = None,
+        training_step_counter: Optional[Any] = None,
+        agent_params: Optional[Dict[str, Any]] = None) -> PetsAgent:
+    """
+    Function for creating a Bellman PETS agent in line with the Bellman
+    implementation.
+    This function builds an action network and uses this to instantiate the agent which is returned.
+
+    :param env: TensorFlow Environment implementing the ControlledRandomWalk.
+    :param num_epochs: Number of epochs for computing policy updates.
+    :param agent_name: Name for the agent to aid in identifying TensorFlow variables etc. when
+        debugging.
+    :param debug: Flag which toggles debugging in the PETS agent.
+    :param training_step_counter: An optional counter to increment every time the train op of the
+        agent is run. If None if provided it defaults to the global_step.
+    :param agent_params: A dictionary of possible overrides for the default TF-Agents agent set up.
+    :return: An instance of Bellman PETS agent.
+    """
+    # Process the action specification to attain the dimensions of the action subspaces to ensure
+    # that in the case that there is only one resource set (and therefore only one action subspace)
+    # the tuple of action specifications of length one is replaced by a single action specification.
+    # This is to align with the fact that the actor network is implemented to return a tuple of
+    # (OneHotCategorical) distributions (one for each resource set) where there are multiple action
+    # subspaces and a single distribution (tfp.distributions.OneHotCategorical) otherwise.
+    # First attain the action spec.
+    # action_spec = env.action_spec()
+
+    # Extract the shape of the subspaces from the action specification tuple.
+    # Action spaces are defined with shape (1, num_actions_for_resource_set) so take the -1th entry.
+    # action_subspace_dimensions = tuple(int(subspace.shape[-1]) for subspace in action_spec)
+
+    # # Then test if there is only one action subspace.
+    # if len(action_spec) == 1:
+    #     # Pull out the only action spec.
+    #     action_spec = action_spec[0]
+
+    if agent_params is None:
+        agent_params = dict()
+
+    callbacks = [tf.keras.callbacks.EarlyStopping(monitor="loss", patience=3)]
+
+    # initializing givcen MDP components
+    reward_model = reward_model_class(
+        env.observation_spec(), env.action_spec()
+    )
+    initial_state_distribution_model = initial_state_distribution_model_class(
+        env.observation_spec()
+    )
+
+    # Set up the PETS agent in line with Bellman toolbox
+    agent = PetsAgent(
+        time_step_spec=env.time_step_spec(),
+        action_spec=env.action_spec(),
+        transition_model_type=agent_params.get('transition_model_type', TransitionModelType.DeterministicEnsemble),
+        num_hidden_layers=agent_params.get('num_hidden_layers', 3),
+        num_hidden_nodes=agent_params.get('num_hidden_nodes', 250),
+        activation_function=agent_params.get('activation_function', tf.nn.relu),
+        ensemble_size=agent_params.get('ensemble_size', 5),
+        predict_state_difference=agent_params.get('predict_state_difference', True),
+        epochs=agent_params.get('epochs', 100),
+        training_batch_size=agent_params.get('training_batch_size', 32),
+        callbacks=agent_params.get('callbacks', callbacks),
+        reward_model=reward_model, # TODO
+        initial_state_distribution_model=initial_state_distribution_model, # TODO
+        trajectory_sampler_type=gent_params.get('trajectory_sampler_type', TrajectorySamplerType.TS1),
+        trajectory_optimization_type=agent_params.get('trajectory_optimization_type', TrajectoryOptimizationType.RandomShooting),
+        horizon=agent_params.get('horizon', 25),
+        population_size=agent_params.get('population_size', 2500),
+        number_of_particles=agent_params.get('number_of_particles', 1),
+        num_elites=agent_params.get('num_elites', 40),
+        learning_rate=agent_params.get('learning_rate', 0.9),
+        max_iterations=agent_params.get('max_iterations', 5),
+        train_step_counter=training_step_counter,
+    )
+
+    return agent
+
+
 
 def create_reinforce_agent(
         env: TFPyEnvironment,
