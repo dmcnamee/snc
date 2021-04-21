@@ -10,6 +10,7 @@ from tf_agents.specs.tensor_spec import BoundedTensorSpec
 import snc.utils.snc_tools as snc
 from snc.environments.rl_environment_wrapper import rl_env_from_snc_env
 from snc.agents.rl.agents import create_bellman_pets_agent
+from snc.agents.rl.models import CRWRewardModel, CRWInitialStateModel
 from snc.environments.scenarios import load_scenario
 
 
@@ -27,7 +28,11 @@ def test_bellman_pets_agent_init(env_name, expected_action_spec_shape):
                                     discount_factor=0.99, normalise_observations=False)
 
     # Instantiate and initialise a PETS agent for the environment.
-    bellman_pets_agent = create_bellman_pets_agent(tf_env)
+    bellman_pets_agent = create_bellman_pets_agent(
+        env=tf_env,
+        reward_model_class=CRWRewardModel,
+        initial_state_distribution_model_class=CRWInitialStateModel,
+    )
 
     # Validate initialisation by checking relevant properties of the initalised agent.
     assert isinstance(bellman_pets_agent.action_spec, BoundedTensorSpec)
@@ -48,8 +53,12 @@ def test_bellman_pets_agent_init_with_multiple_resource_sets():
                                     discount_factor=0.99, normalise_observations=False)
 
     # Instantiate and initialise a PPO agent for the environment.
-    bellman_pets_agent = create_bellman_pets_agent(tf_env, num_epochs=10)
-    bellman_pets_agent.initialize()
+    bellman_pets_agent = create_bellman_pets_agent(
+        env=tf_env,
+        reward_model_class=CRWRewardModel,
+        initial_state_distribution_model_class=CRWInitialStateModel,
+    )
+    
     # Validate initialisation by checking some properties of the initalised agent.
     assert isinstance(bellman_pets_agent.action_spec, tuple)
     assert len(bellman_pets_agent.action_spec) == 2
@@ -77,8 +86,11 @@ def test_bellman_pets_agent_play(env_name):
                                               discount_factor=0.99, normalise_observations=False)
 
     # Instantiate and initialise a PPO agent for the environment.
-    bellman_pets_agent = create_bellman_pets_agent(tf_env, num_epochs=10)
-    bellman_pets_agent.initialize()
+    bellman_pets_agent = create_bellman_pets_agent(
+        env=tf_env,
+        reward_model_class=CRWRewardModel,
+        initial_state_distribution_model_class=CRWInitialStateModel,
+    )
 
     # Reset the environment
     tf_env.reset()
@@ -123,7 +135,12 @@ def test_bellman_pets_agent_learning(env_name):
     # Set up a training step counter.
     global_step = tf.compat.v1.train.get_or_create_global_step()
     # Instantiate a PPO agent
-    bellman_pets_agent = create_bellman_pets_agent(tf_env, num_epochs=10, training_step_counter=global_step)
+    bellman_pets_agent = create_bellman_pets_agent(
+        env=tf_env,
+        reward_model_class=CRWRewardModel,
+        initial_state_distribution_model_class=CRWInitialStateModel,
+        training_step_counter=global_step,
+    )
 
     # Instantiate a replay buffer.
     replay_buffer = TFUniformReplayBuffer(
