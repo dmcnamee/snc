@@ -16,10 +16,6 @@ from bellman.agents.pets.pets_agent import PetsAgent
 from bellman.environments.initial_state_distribution_model import InitialStateDistributionModel
 from bellman.environments.reward_model import RewardModel
 
-# is this needed anywhere? yes 
-from snc.agents.rl.models import CRWRewardModel
-
-
 
 def create_bellman_pets_agent(
         env: TFPyEnvironment,
@@ -70,15 +66,12 @@ def create_bellman_pets_agent(
     callbacks = [tf.keras.callbacks.EarlyStopping(monitor="loss", patience=3)]
 
     # initializing given MDP components
-    # reward_model = reward_model_class(
-    #     env.observation_spec(), env.action_spec()
-    # )
-    # initial_state_distribution_model = initial_state_distribution_model_class(
-    #     env.observation_spec()
-    # )
-    reward_model = CRWRewardModel(env=env) # NOTE hack
-    initial_state_distribution_model = env.state_initialiser() # NOTE hack
-
+    # NOTE: hacked for the time being, using quantities directly from the environment for now
+    reward_model = reward_model_class(
+        env.observation_spec(), env.action_spec(), env
+    )
+    initial_state_distribution_model = initial_state_distribution_model_class(env)
+   
     # Set up the PETS agent in line with Bellman toolbox
     agent = PetsAgent(
         time_step_spec=env.time_step_spec(),
