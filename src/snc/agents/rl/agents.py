@@ -16,8 +16,8 @@ from bellman.agents.pets.pets_agent import PetsAgent
 from bellman.environments.initial_state_distribution_model import InitialStateDistributionModel
 from bellman.environments.reward_model import RewardModel
 
-# is this needed anywhere?
-from models import CRWRewardModel
+# is this needed anywhere? yes 
+from snc.agents.rl.models import CRWRewardModel
 
 
 
@@ -92,8 +92,8 @@ def create_bellman_pets_agent(
         epochs=agent_params.get('epochs', 100),
         training_batch_size=agent_params.get('training_batch_size', 32),
         callbacks=agent_params.get('callbacks', callbacks),
-        reward_model=reward_model, # TODO
-        initial_state_distribution_model=initial_state_distribution_model, # TODO
+        reward_model=reward_model,
+        initial_state_distribution_model=initial_state_distribution_model,
         trajectory_sampler_type=gent_params.get('trajectory_sampler_type', TrajectorySamplerType.TS1),
         trajectory_optimization_type=agent_params.get('trajectory_optimization_type', TrajectoryOptimizationType.RandomShooting),
         horizon=agent_params.get('horizon', 25),

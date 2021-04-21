@@ -27,7 +27,7 @@ def test_bellman_pets_agent_init(env_name, expected_action_spec_shape):
                                     discount_factor=0.99, normalise_observations=False)
 
     # Instantiate and initialise a PETS agent for the environment.
-    bellman_pets_agent = create_bellman_pets_agent(tf_env, reward_model_class=, initial_state_distribution_model_class=)
+    bellman_pets_agent = create_bellman_pets_agent(tf_env)
 
     # Validate initialisation by checking relevant properties of the initalised agent.
     assert isinstance(bellman_pets_agent.action_spec, BoundedTensorSpec)
