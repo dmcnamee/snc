@@ -15,9 +15,9 @@ class CRWRewardModel(RewardModel):
     Reward function for the controlled random walk environment, based on cost_per_buffer.
     Information from the environment is neeeded.
     """
-    def __init__(self, env: TFPyEnvironment):
+    def __init__(self, observation_spec: tf.TensorSpec, action_spec: tf.TensorSpec, env: TFPyEnvironment):
         self.cost_per_buffer = env.cost_per_buffer
-        super().__init__()
+        super().__init__(observation_spec, action_spec)
 
     def _step_reward(
         self, observation: tf.Tensor, action: tf.Tensor, next_observation: tf.Tensor
