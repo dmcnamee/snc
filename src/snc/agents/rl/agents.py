@@ -16,6 +16,10 @@ from bellman.agents.pets.pets_agent import PetsAgent
 from bellman.environments.initial_state_distribution_model import InitialStateDistributionModel
 from bellman.environments.reward_model import RewardModel
 
+# is this needed anywhere?
+from models import CRWRewardModel
+
+
 
 def create_bellman_pets_agent(
         env: TFPyEnvironment,
@@ -35,6 +39,8 @@ def create_bellman_pets_agent(
     :param agent_name: Name for the agent to aid in identifying TensorFlow variables etc. when
         debugging.
     :param debug: Flag which toggles debugging in the PETS agent.
+    :param reward_model_class: CRWRewardModel, dummy variable, currently extracted from env
+    :param initial_state_distribution_model_class: CRWStateInitialiser, dummy variable, currently extracted from env
     :param training_step_counter: An optional counter to increment every time the train op of the
         agent is run. If None if provided it defaults to the global_step.
     :param agent_params: A dictionary of possible overrides for the default TF-Agents agent set up.
@@ -63,13 +69,15 @@ def create_bellman_pets_agent(
 
     callbacks = [tf.keras.callbacks.EarlyStopping(monitor="loss", patience=3)]
 
-    # initializing givcen MDP components
-    reward_model = reward_model_class(
-        env.observation_spec(), env.action_spec()
-    )
-    initial_state_distribution_model = initial_state_distribution_model_class(
-        env.observation_spec()
-    )
+    # initializing given MDP components
+    # reward_model = reward_model_class(
+    #     env.observation_spec(), env.action_spec()
+    # )
+    # initial_state_distribution_model = initial_state_distribution_model_class(
+    #     env.observation_spec()
+    # )
+    reward_model = CRWRewardModel(env=env) # NOTE hack
+    initial_state_distribution_model = env.state_initialiser() # NOTE hack
 
     # Set up the PETS agent in line with Bellman toolbox
     agent = PetsAgent(
